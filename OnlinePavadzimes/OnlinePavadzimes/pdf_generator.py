@@ -410,6 +410,7 @@ def generate_pdf(data):
     vat_val          = data.get('vat', '0,00')
     total_val        = data.get('total', '0,00')
     raw_discount_eur = data.get('raw_discount_eur', 0.0)
+    apply_vat        = data.get('apply_vat', True)
 
     style_sum_label = ParagraphStyle('SumLabel', parent=style_normal,
         fontName=REGULAR_FONT, alignment=TA_RIGHT, fontSize=9)
@@ -431,19 +432,21 @@ def generate_pdf(data):
                             Paragraph(f"-{data.get('discount_eur', '0,00')} €", style_sum_val)])
         totals_rows.append([Paragraph(tr['total_discount'], style_sum_label),
                             Paragraph(f"{data.get('subtotal_after_discount', '0,00')} €", style_sum_val)])
-        totals_rows.append([Paragraph(tr['vat'], style_sum_label),
-                            Paragraph(f"{vat_val} €", style_sum_val)])
+        if apply_vat:
+            totals_rows.append([Paragraph(tr['vat'], style_sum_label),
+                                Paragraph(f"{vat_val} €", style_sum_val)])
         totals_rows.append([Paragraph(tr['grand_total'], style_sum_label_bold),
                             Paragraph(f"{total_val} €", style_sum_val_bold)])
-        last_idx = len(totals_rows) - 1
     else:
         totals_rows.append([Paragraph(tr['total_label'], style_sum_label),
                             Paragraph(f"{subtotal_val} €", style_sum_val)])
-        totals_rows.append([Paragraph(tr['vat'], style_sum_label),
-                            Paragraph(f"{vat_val} €", style_sum_val)])
+        if apply_vat:
+            totals_rows.append([Paragraph(tr['vat'], style_sum_label),
+                                Paragraph(f"{vat_val} €", style_sum_val)])
         totals_rows.append([Paragraph(tr['grand_total'], style_sum_label_bold),
                             Paragraph(f"{total_val} €", style_sum_val_bold)])
-        last_idx = 2
+
+    last_idx = len(totals_rows) - 1
 
     totals_table = Table(totals_rows, colWidths=[100*mm, 70*mm])
     totals_style = [
