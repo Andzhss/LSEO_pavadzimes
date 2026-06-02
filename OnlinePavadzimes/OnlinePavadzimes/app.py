@@ -28,18 +28,46 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
     }
-    /* Sidebar */
+    /* Sidebar fons */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1a6fa8 0%, #1557a0 100%);
     }
+    /* Visi teksti sānjoslā — balti */
     section[data-testid="stSidebar"] * {
         color: #ffffff !important;
     }
+    /* Ievadlauku foni — balti ar tumšu tekstu */
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] textarea,
+    section[data-testid="stSidebar"] [data-baseweb="input"] input,
+    section[data-testid="stSidebar"] [data-baseweb="select"] div,
+    section[data-testid="stSidebar"] [data-baseweb="select"] span,
+    section[data-testid="stSidebar"] [role="listbox"] * {
+        background-color: #ffffff !important;
+        color: #1a1a2e !important;
+    }
+    /* Selectbox un number input konteineri */
+    section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+    section[data-testid="stSidebar"] [data-baseweb="base-input"] {
+        background-color: #ffffff !important;
+        border-color: #4da6e8 !important;
+    }
+    section[data-testid="stSidebar"] [data-baseweb="base-input"] input {
+        color: #1a1a2e !important;
+    }
+    /* Date input */
+    section[data-testid="stSidebar"] [data-baseweb="input"] {
+        background-color: #ffffff !important;
+    }
+    /* Etiķetes virs laukiem — gaiši zilas */
+    section[data-testid="stSidebar"] label,
     section[data-testid="stSidebar"] .stSelectbox label,
     section[data-testid="stSidebar"] .stNumberInput label,
-    section[data-testid="stSidebar"] .stDateInput label {
+    section[data-testid="stSidebar"] .stDateInput label,
+    section[data-testid="stSidebar"] .stTextInput label {
         color: #cce8ff !important;
         font-size: 0.85rem;
+        font-weight: 600;
     }
     /* Headers */
     h1 { color: #1a6fa8 !important; border-bottom: 3px solid #4da6e8; padding-bottom: 8px; }
@@ -1119,8 +1147,9 @@ def render_invoice_app():
     st.header(t("goods"))
 
     if 'items_df' not in st.session_state:
-        initial_data = [{"NOSAUKUMS": "", "Mērvienība": "", "DAUDZUMS": 1.00, "CENA (EUR)": 0.00}]
-        st.session_state.items_df = pd.DataFrame(initial_data)
+        st.session_state.items_df = pd.DataFrame(
+            columns=["NOSAUKUMS", "Mērvienība", "DAUDZUMS", "CENA (EUR)"]
+        )
 
     st.subheader(t("add_from_presets"))
     presets_df = load_presets()
@@ -1176,7 +1205,7 @@ def render_invoice_app():
     discount_eur, discount_percent   = 0.0, 0.0
     subtotal_after_discount          = 0.0
     amount_words                     = ""
-    apply_vat                        = True
+    apply_vat                        = False
     calc_df                          = edited_df.copy()
 
     def fmt_curr(val):
@@ -1201,8 +1230,8 @@ def render_invoice_app():
 
             subtotal_after_discount = subtotal - discount_eur
 
-            # PVN ķeksītis
-            apply_vat = st.checkbox(t("vat_toggle"), value=True, key="apply_vat_checkbox")
+            # PVN ķeksītis — noklusējums: NEATZĪMĒTS
+            apply_vat = st.checkbox(t("vat_toggle"), value=False, key="apply_vat_checkbox")
 
             vat   = subtotal_after_discount * 0.21 if apply_vat else 0.0
             total = subtotal_after_discount + vat
