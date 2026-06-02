@@ -1262,8 +1262,7 @@ def render_invoice_app():
                     if discount_eur > 0:
                         st.markdown(f"{t('discount_amount')} ({discount_percent:g}%)**:** € -{fmt_curr(discount_eur)}")
                         st.markdown(f"{t('total_with_discount')} € {fmt_curr(subtotal_after_discount)}")
-                    if apply_vat:
-                        st.markdown(f"{t('vat_21')} € {fmt_curr(vat)}")
+                    st.markdown(f"{t('vat_21')} € {fmt_curr(vat)}")
                     st.markdown(f"{t('total_payable')} € {fmt_curr(total)}")
                 amount_words = money_to_words_lv(total)
                 st.info(f"{t('amount_words_full')} {amount_words}")
