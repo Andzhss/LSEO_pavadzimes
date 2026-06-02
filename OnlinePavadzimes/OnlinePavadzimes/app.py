@@ -197,6 +197,7 @@ TRANSLATIONS = {
         "discount_amount": "**Atlaides apjoms",
         "total_with_discount": "**Kopā ar atlaidi (bez PVN):**",
         "vat_21": "**PVN (21%):**",
+        "vat_toggle": "Pievienot PVN (21%)",
         "total_payable": "**KOPUMĀ APMAKSAI:**",
         "amount_words_full": "**Summa vārdiem:**",
         "calc_error": "Kļūda aprēķinos:",
@@ -322,6 +323,7 @@ TRANSLATIONS = {
         "discount_amount": "**Discount amount",
         "total_with_discount": "**Total with discount (excl. VAT):**",
         "vat_21": "**VAT (21%):**",
+        "vat_toggle": "Apply VAT (21%)",
         "total_payable": "**TOTAL PAYABLE:**",
         "amount_words_full": "**Amount in words:**",
         "calc_error": "Calculation error:",
@@ -569,7 +571,11 @@ def save_to_history(invoice_data, local_path, github_path):
     items        = invoice_data.get('items', [])
     raw_total    = float(invoice_data.get('raw_total', 0) or 0)
     raw_discount = float(invoice_data.get('raw_discount_eur', 0) or 0)
-    base_amount  = round(raw_total / 1.21, 2)
+    apply_vat    = invoice_data.get('apply_vat', True)
+    if apply_vat:
+        base_amount = round(raw_total / 1.21, 2)
+    else:
+        base_amount = raw_total
     vat_amount   = round(raw_total - base_amount, 2)
     descriptions = [it.get('name', '') for it in items if it.get('name')]
     pr_numurs    = invoice_data.get('doc_id', '')
@@ -1170,6 +1176,7 @@ def render_invoice_app():
     discount_eur, discount_percent   = 0.0, 0.0
     subtotal_after_discount          = 0.0
     amount_words                     = ""
+    apply_vat                        = True
     calc_df                          = edited_df.copy()
 
     def fmt_curr(val):
@@ -1193,7 +1200,11 @@ def render_invoice_app():
                 discount_percent = (discount_eur / subtotal * 100) if subtotal > 0 else 0
 
             subtotal_after_discount = subtotal - discount_eur
-            vat   = subtotal_after_discount * 0.21
+
+            # PVN ķeksītis
+            apply_vat = st.checkbox(t("vat_toggle"), value=True, key="apply_vat_checkbox")
+
+            vat   = subtotal_after_discount * 0.21 if apply_vat else 0.0
             total = subtotal_after_discount + vat
 
             is_advance = "avansa" in doc_type_lv.lower() or "advance" in doc_type.lower()
@@ -1222,7 +1233,8 @@ def render_invoice_app():
                     if discount_eur > 0:
                         st.markdown(f"{t('discount_amount')} ({discount_percent:g}%)**:** € -{fmt_curr(discount_eur)}")
                         st.markdown(f"{t('total_with_discount')} € {fmt_curr(subtotal_after_discount)}")
-                    st.markdown(f"{t('vat_21')} € {fmt_curr(vat)}")
+                    if apply_vat:
+                        st.markdown(f"{t('vat_21')} € {fmt_curr(vat)}")
                     st.markdown(f"{t('total_payable')} € {fmt_curr(total)}")
                 amount_words = money_to_words_lv(total)
                 st.info(f"{t('amount_words_full')} {amount_words}")
@@ -1267,6 +1279,7 @@ def render_invoice_app():
         'vat':                     fmt_curr(vat),
         'total':                   fmt_curr(total),
         'raw_total':               total,
+        'apply_vat':               apply_vat,
         'raw_advance':             advance_payment,
         'advance_percent':         advance_percent,
         'discount_eur':            fmt_curr(discount_eur),
