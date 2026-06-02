@@ -376,21 +376,22 @@ def generate_docx(data):
     vat_val          = data.get('vat', '0,00')
     total_val        = data.get('total', '0,00')
     raw_discount_eur = data.get('raw_discount_eur', 0.0)
+    apply_vat        = data.get('apply_vat', True)
 
     if raw_discount_eur > 0:
         sum_rows = [
             (tr['total_no_vat'],                                         subtotal_val,                           False),
             (f"{tr['discount']} ({data.get('discount_percent',0):g}%)", f"-{data.get('discount_eur','0,00')}",  False),
             (tr['total_discount'],                                        data.get('subtotal_after_discount','0,00'), False),
-            (tr['vat'],                                                   vat_val,                               False),
-            (tr['grand_total'],                                           total_val,                             True),
         ]
+        if apply_vat:
+            sum_rows.append((tr['vat'], vat_val, False))
+        sum_rows.append((tr['grand_total'], total_val, True))
     else:
-        sum_rows = [
-            (tr['total_label'], subtotal_val, False),
-            (tr['vat'],         vat_val,      False),
-            (tr['grand_total'], total_val,    True),
-        ]
+        sum_rows = [(tr['total_label'], subtotal_val, False)]
+        if apply_vat:
+            sum_rows.append((tr['vat'], vat_val, False))
+        sum_rows.append((tr['grand_total'], total_val, True))
 
     sum_table = doc.add_table(rows=len(sum_rows), cols=3)
     sum_table.autofit = False
