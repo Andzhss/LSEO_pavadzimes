@@ -123,15 +123,16 @@ CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")
 TOKEN_FILE = os.path.join(BASE_DIR, "token.json")
 
 # Lokālie CSV faili
-LOCAL_PRESETS_PATH    = os.path.join(BASE_DIR, "presets.csv")
-LOCAL_HISTORY_PATH    = os.path.join(BASE_DIR, "invoice_history.csv")
-LOCAL_TEST_HIST_PATH  = os.path.join(BASE_DIR, "test_invoice_history.csv")
+LOCAL_PRESETS_PATH    = os.path.join(BASE_DIR, "bseo_presets.csv")
+LOCAL_HISTORY_PATH    = os.path.join(BASE_DIR, "bseo_invoice_history.csv")
+LOCAL_TEST_HIST_PATH  = os.path.join(BASE_DIR, "bseo_test_invoice_history.csv")
 
 # GitHub ceļi (repozitorijā)
-GITHUB_REPO            = "Andzhss/OnlinePavadzimes"
-GITHUB_PRESETS_PATH    = "OnlinePavadzimes/presets.csv"
-GITHUB_HISTORY_PATH    = "OnlinePavadzimes/invoice_history.csv"
-GITHUB_TEST_HIST_PATH  = "OnlinePavadzimes/test_invoice_history.csv"
+# Nomainīt uz:
+GITHUB_REPO            = "Andzhss/LSEO_pavadzimes"
+GITHUB_PRESETS_PATH    = "LSEO/presets.csv"
+GITHUB_HISTORY_PATH    = "LSEO/invoice_history.csv"
+GITHUB_TEST_HIST_PATH  = "LSEO/test_invoice_history.csv"
 
 # Google Drive
 GOOGLE_DRIVE_FOLDER_ID = "1vqhkHGH9WAMaFnXtduyyjYdEzHMx0iX9"
