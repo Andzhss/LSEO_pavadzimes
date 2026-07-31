@@ -943,23 +943,6 @@ def render_invoice_app():
     default_due_date = st.session_state.get('loaded_due_date', doc_date + datetime.timedelta(days=14))
     due_date = st.sidebar.date_input(t("due_date"), default_due_date)
 
-    doc_types = t("doc_types")
-    dt_index = 0
-    if 'loaded_doc_type' in st.session_state:
-        ldt = st.session_state.loaded_doc_type
-        # Try to match by position
-        lv_types = TRANSLATIONS["lv"]["doc_types"]
-        en_types = TRANSLATIONS["en"]["doc_types"]
-        if ldt in lv_types:
-            dt_index = lv_types.index(ldt)
-        elif ldt in en_types:
-            dt_index = en_types.index(ldt)
-        if dt_index < len(doc_types):
-            pass
-        else:
-            dt_index = 0
-    doc_type = st.sidebar.selectbox(t("doc_type"), doc_types, index=dt_index)
-
     st.sidebar.markdown("---")
 
     st.sidebar.subheader(t("open_prev"))
@@ -1023,6 +1006,21 @@ def render_invoice_app():
             'receiver_name': '', 'receiver_reg_no': '', 'receiver_address': '',
             'customer_name': '', 'customer_reg_no': '', 'customer_address': ''
         }
+
+    # --- Dokumenta tips (galvenajā ekrānā) ---
+    doc_types = t("doc_types")
+    dt_index = 0
+    if 'loaded_doc_type' in st.session_state:
+        ldt = st.session_state.loaded_doc_type
+        lv_types = TRANSLATIONS["lv"]["doc_types"]
+        en_types = TRANSLATIONS["en"]["doc_types"]
+        if ldt in lv_types:
+            dt_index = lv_types.index(ldt)
+        elif ldt in en_types:
+            dt_index = en_types.index(ldt)
+        if dt_index >= len(doc_types):
+            dt_index = 0
+    doc_type = st.selectbox(t("doc_type"), doc_types, index=dt_index)
 
     # Map doc_type to internal LV key for logic
     lang = st.session_state.get("lang", "lv")
