@@ -503,13 +503,33 @@ def _migrate_old_history(df):
         records.append(rec)
     return records
 
-def load_history(local_path):
+def load_history(local_path, github_path=None):
+    """Ielādē vēsturi no lokālā CSV. Ja lokāli tukšs un norādīts github_path, automātiski mēģina ielādēt no GitHub."""
     if not os.path.exists(local_path):
-        return []
+        # Mēģinām automātiski iegūt no GitHub
+        if github_path:
+            content = fetch_csv_from_github(github_path)
+            if content and ('doc_id' in content or 'kartas_nr' in content):
+                with open(local_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+        if not os.path.exists(local_path):
+            return []
     try:
         df = pd.read_csv(local_path, dtype=str)
         if df.empty:
-            return []
+            # Arī ja fails ir tukšs, mēģinām GitHub
+            if github_path:
+                content = fetch_csv_from_github(github_path)
+                if content and ('doc_id' in content or 'kartas_nr' in content):
+                    with open(local_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    df = pd.read_csv(local_path, dtype=str)
+                    if df.empty:
+                        return []
+                else:
+                    return []
+            else:
+                return []
         if 'doc_id' in df.columns and 'kartas_nr' not in df.columns:
             return _migrate_old_history(df)
         records = []
@@ -594,12 +614,19 @@ def save_to_history(invoice_data, local_path, github_path):
     if not updated:
         history.append(new_entry)
     df = _history_to_df(history)
+    # VIENMĒR saglabājam lokāli
     df.to_csv(local_path, index=False, encoding='utf-8')
+    # Ja ir GitHub Token, push arī uz GitHub
     if get_github_token():
         success, msg = push_csv_to_github(df, github_path, f"Pievieno {pr_numurs}")
-        return success, msg
+        if success:
+            return True, msg
+        else:
+            # GitHub neizdevās, bet lokāli ir saglabāts — brīdinām, bet nezaudējam datus
+            return False, f"Lokāli saglabāts, bet GitHub kļūda: {msg}"
     else:
-        return False, "Nav GITHUB_TOKEN"
+        # Nav GitHub Token, bet lokāli saglabāts
+        return True, "Saglabāts lokāli (nav GitHub Token)"
 
 def sync_history_from_github(local_path, github_path):
     content = fetch_csv_from_github(github_path)
@@ -678,15 +705,25 @@ def handle_download(invoice_data, file_buffer, filename, mime_type, is_proforma)
     if is_proforma:
         success, msg = save_to_history(invoice_data, LOCAL_TEST_HIST_PATH, GITHUB_TEST_HIST_PATH)
         if success:
-            st.toast(t("save_github_ok"), icon="💾")
+            if "GitHub" in msg and "Veiksmīgi" in msg:
+                st.toast(t("save_github_ok"), icon="💾")
+            elif "lokāli" in msg.lower():
+                st.toast(f"💾 {msg}", icon="⚠️")
+            else:
+                st.toast(t("save_github_ok"), icon="💾")
         else:
-            st.error(f"{t('save_fail')} {msg}")
+            st.warning(f"{t('save_fail')} {msg}")
     else:
         success, msg = save_to_history(invoice_data, LOCAL_HISTORY_PATH, GITHUB_HISTORY_PATH)
         if success:
-            st.toast(t("save_ok"), icon="💾")
+            if "GitHub" in msg and "Veiksmīgi" in msg:
+                st.toast(t("save_ok"), icon="💾")
+            elif "lokāli" in msg.lower():
+                st.toast(f"💾 {msg}", icon="⚠️")
+            else:
+                st.toast(t("save_ok"), icon="💾")
         else:
-            st.error(f"{t('save_fail')} {msg}")
+            st.warning(f"{t('save_fail')} {msg}")
 
 # ---------------------------------------------------------------------------
 # Sagataves
@@ -861,8 +898,8 @@ def render_presets_app():
 # ---------------------------------------------------------------------------
 
 def render_invoice_app():
-    history      = load_history(LOCAL_HISTORY_PATH)
-    test_history = load_history(LOCAL_TEST_HIST_PATH)
+    history      = load_history(LOCAL_HISTORY_PATH, GITHUB_HISTORY_PATH)
+    test_history = load_history(LOCAL_TEST_HIST_PATH, GITHUB_TEST_HIST_PATH)
     next_number  = get_next_invoice_number(history)
 
     st.sidebar.header(t("settings"))
