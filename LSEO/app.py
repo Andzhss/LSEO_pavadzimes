@@ -7,13 +7,6 @@ import io
 import requests
 import base64
 
-# --- Google Bibliotēkas ---
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
-
 from utils import scrape_lursoft, money_to_words_lv
 from pdf_generator import generate_pdf
 from docx_generator import generate_docx
@@ -119,8 +112,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")
-TOKEN_FILE = os.path.join(BASE_DIR, "token.json")
 
 # Lokālie CSV faili
 LOCAL_PRESETS_PATH    = os.path.join(BASE_DIR, "bseo_presets.csv")
@@ -133,10 +124,6 @@ GITHUB_REPO            = "Andzhss/LSEO_pavadzimes"
 GITHUB_PRESETS_PATH    = "LSEO/presets.csv"
 GITHUB_HISTORY_PATH    = "LSEO/invoice_history.csv"
 GITHUB_TEST_HIST_PATH  = "LSEO/test_invoice_history.csv"
-
-# Google Drive
-GOOGLE_DRIVE_FOLDER_ID = "1vqhkHGH9WAMaFnXtduyyjYdEzHMx0iX9"
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 # CSV kolonnas vēsturei
 HISTORY_COLS = [
@@ -459,46 +446,6 @@ def push_csv_to_github(df, github_path, commit_message="Update CSV via App"):
         return False, str(e)
 
 # ---------------------------------------------------------------------------
-# Google Drive funkcijas
-# ---------------------------------------------------------------------------
-
-def get_drive_service():
-    creds = None
-    if os.path.exists(TOKEN_FILE):
-        try:
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-        except Exception:
-            os.remove(TOKEN_FILE)
-            creds = None
-    if creds and creds.expired and creds.refresh_token:
-        try:
-            creds.refresh(Request())
-            with open(TOKEN_FILE, 'w') as f:
-                f.write(creds.to_json())
-        except Exception:
-            if os.path.exists(TOKEN_FILE):
-                os.remove(TOKEN_FILE)
-            creds = None
-    if creds and creds.valid:
-        return build('drive', 'v3', credentials=creds)
-    return None
-
-def upload_to_drive(file_buffer, filename, mime_type):
-    try:
-        service = get_drive_service()
-        if not service:
-            return False
-        file_metadata = {'name': filename, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
-        file_buffer.seek(0)
-        media = MediaIoBaseUpload(file_buffer, mimetype=mime_type, resumable=True)
-        service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        file_buffer.seek(0)
-        return True
-    except Exception as e:
-        st.error(f"❌ Kļūda Google Drive: {e}")
-        return False
-
-# ---------------------------------------------------------------------------
 # Vēstures funkcijas
 # ---------------------------------------------------------------------------
 
@@ -740,15 +687,6 @@ def handle_download(invoice_data, file_buffer, filename, mime_type, is_proforma)
             st.toast(t("save_ok"), icon="💾")
         else:
             st.error(f"{t('save_fail')} {msg}")
-
-        if get_drive_service():
-            success_drive = upload_to_drive(file_buffer, filename, mime_type)
-            if success_drive:
-                st.toast(f"{t('drive_ok')} {filename}", icon="☁️")
-            else:
-                st.toast(t("drive_fail"), icon="❌")
-        else:
-            st.toast(t("drive_no_conn"), icon="⚠️")
 
 # ---------------------------------------------------------------------------
 # Sagataves
@@ -1014,45 +952,6 @@ def render_invoice_app():
             st.rerun()
     else:
         st.sidebar.info(t("no_test"))
-
-    st.sidebar.markdown("---")
-
-    st.sidebar.subheader(t("google_drive"))
-    if GOOGLE_DRIVE_FOLDER_ID:
-        drive_url = f"https://drive.google.com/drive/folders/{GOOGLE_DRIVE_FOLDER_ID}"
-        st.sidebar.link_button(t("open_drive"), drive_url)
-
-    service = get_drive_service()
-    if service:
-        st.sidebar.success(t("connected"))
-        if st.sidebar.button(t("disconnect")):
-            if os.path.exists(TOKEN_FILE):
-                os.remove(TOKEN_FILE)
-            st.rerun()
-    else:
-        st.sidebar.warning(t("not_connected"))
-        if os.path.exists(CREDENTIALS_FILE):
-            flow = InstalledAppFlow.from_client_secrets_file(
-                CREDENTIALS_FILE, SCOPES, redirect_uri='urn:ietf:wg:oauth:2.0:oob'
-            )
-            auth_url, _ = flow.authorization_url(prompt='consent')
-            st.sidebar.markdown(f"{t('auth_step1')}({auth_url})**")
-            auth_code = st.sidebar.text_input(t("auth_step2"))
-            if st.sidebar.button(t("auth_step3")):
-                if auth_code:
-                    try:
-                        flow.fetch_token(code=auth_code)
-                        creds = flow.credentials
-                        with open(TOKEN_FILE, 'w') as token_file:
-                            token_file.write(creds.to_json())
-                        st.success(t("auth_ok"))
-                        st.rerun()
-                    except Exception as e:
-                        st.sidebar.error(f"{t('auth_fail')} {e}")
-                else:
-                    st.sidebar.error(t("auth_no_code"))
-        else:
-            st.sidebar.error(t("no_credentials"))
 
     st.sidebar.markdown("---")
 

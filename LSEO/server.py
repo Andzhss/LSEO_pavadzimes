@@ -3,9 +3,6 @@ from flask_cors import CORS
 import io
 import datetime
 import os
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
 
 from pdf_generator import generate_pdf
 from docx_generator import generate_docx
@@ -13,31 +10,6 @@ from docx_generator import generate_docx
 app = Flask(__name__)
 # Atļaujam Shopify lapai sūtīt pieprasījumus uz šo serveri
 CORS(app)
-
-GOOGLE_DRIVE_FOLDER_ID = "1vqhkHGH9WAMaFnXtduyyjYdEzHMx0iX9"
-TOKEN_FILE = "token.json"
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-
-def get_drive_service():
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-        if creds and creds.valid:
-            return build('drive', 'v3', credentials=creds)
-    return None
-
-def upload_to_drive(file_buffer, filename, mime_type):
-    try:
-        service = get_drive_service()
-        if not service: return False
-        file_metadata = {'name': filename, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
-        file_buffer.seek(0)
-        media = MediaIoBaseUpload(file_buffer, mimetype=mime_type, resumable=True)
-        service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        file_buffer.seek(0)
-        return True
-    except Exception as e:
-        print(f"Drive Error: {e}")
-        return False
 
 @app.route('/generate/<file_type>', methods=['POST'])
 def generate_doc(file_type):
@@ -57,9 +29,6 @@ def generate_doc(file_type):
         mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     else:
         return jsonify({"error": "Nezināms formāts"}), 400
-
-    # Augšupielādējam Google Drive
-    upload_to_drive(buffer, filename, mime)
 
     # Nosūtām atpakaļ lietotājam lejupielādei
     return send_file(
