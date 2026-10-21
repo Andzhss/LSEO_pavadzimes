@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+LSEO/bseo_*.csv
+.streamlit/secrets.toml

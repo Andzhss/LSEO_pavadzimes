@@ -14,99 +14,129 @@ from docx_generator import generate_docx
 # --- Konfigurācija ---
 st.set_page_config(page_title="SIA Baltic SEO Invoice Generator", layout="wide")
 
-# --- Sky blue theme CSS ---
+# --- Dark theme CSS (pielāgots Linux dark mode) ---
 st.markdown("""
 <style>
-    /* Main background */
+    :root { color-scheme: dark; }
+
+    /* Galvenais fons un teksts */
     .stApp {
-        background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+        background: #0d1117;
+        color: #e6edf3;
     }
-    /* Sidebar fons */
+    .stApp p, .stApp label, .stApp span, .stApp li,
+    .stApp .stMarkdown, .stApp .stCaption, .stApp .stMarkdown p {
+        color: #e6edf3;
+    }
+
+    /* Virsraksti */
+    h1 { color: #7cc0ff !important; border-bottom: 2px solid #2f81c9; padding-bottom: 8px; }
+    h2, h3, h4 { color: #7cc0ff !important; }
+
+    /* Sidebar */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a6fa8 0%, #1557a0 100%);
+        background: #111827;
+        color: #e6edf3;
+        border-right: 1px solid #1f2d4a;
     }
-    /* Visi teksti sānjoslā — balti */
-    section[data-testid="stSidebar"] * {
-        color: #ffffff !important;
-    }
-    /* Ievadlauku foni — balti ar tumšu tekstu */
+    section[data-testid="stSidebar"] * { color: #e6edf3 !important; }
     section[data-testid="stSidebar"] input,
     section[data-testid="stSidebar"] textarea,
-    section[data-testid="stSidebar"] [data-baseweb="input"] input,
-    section[data-testid="stSidebar"] [data-baseweb="select"] div,
-    section[data-testid="stSidebar"] [data-baseweb="select"] span,
+    section[data-testid="stSidebar"] [data-baseweb="input"],
+    section[data-testid="stSidebar"] [data-baseweb="textarea"],
+    section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+    section[data-testid="stSidebar"] [data-baseweb="base-input"],
     section[data-testid="stSidebar"] [role="listbox"] * {
-        background-color: #ffffff !important;
-        color: #1a1a2e !important;
+        background-color: #1a2233 !important;
+        color: #e6edf3 !important;
     }
-    /* Selectbox un number input konteineri */
+    section[data-testid="stSidebar"] [data-baseweb="base-input"] input,
+    section[data-testid="stSidebar"] [data-baseweb="select"] input,
+    section[data-testid="stSidebar"] [data-baseweb="select"] span {
+        color: #e6edf3 !important;
+    }
     section[data-testid="stSidebar"] [data-baseweb="select"] > div,
     section[data-testid="stSidebar"] [data-baseweb="base-input"] {
-        background-color: #ffffff !important;
-        border-color: #4da6e8 !important;
+        border-color: #2f81c9 !important;
     }
-    section[data-testid="stSidebar"] [data-baseweb="base-input"] input {
-        color: #1a1a2e !important;
-    }
-    /* Date input */
-    section[data-testid="stSidebar"] [data-baseweb="input"] {
-        background-color: #ffffff !important;
-    }
-    /* Etiķetes virs laukiem — gaiši zilas */
     section[data-testid="stSidebar"] label,
     section[data-testid="stSidebar"] .stSelectbox label,
     section[data-testid="stSidebar"] .stNumberInput label,
     section[data-testid="stSidebar"] .stDateInput label,
     section[data-testid="stSidebar"] .stTextInput label {
-        color: #cce8ff !important;
+        color: #9fc6e8 !important;
         font-size: 0.85rem;
         font-weight: 600;
     }
-    /* Headers */
-    h1 { color: #1a6fa8 !important; border-bottom: 3px solid #4da6e8; padding-bottom: 8px; }
-    h2, h3 { color: #1557a0 !important; }
-    /* Buttons */
-    .stButton > button {
-        background: linear-gradient(90deg, #1a6fa8, #4da6e8);
-        color: white;
+
+    /* Galvenā satura ievadlauki */
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-baseweb="select"] > div,
+    [data-baseweb="input"],
+    [data-baseweb="textarea"] {
+        background-color: #1a2233 !important;
+        color: #e6edf3 !important;
+        border-color: #2f81c9 !important;
+    }
+    [data-baseweb="select"] span, [data-baseweb="select"] input {
+        color: #e6edf3 !important;
+    }
+    [role="listbox"], [data-baseweb="popover"], [data-baseweb="menu"] {
+        background-color: #1a2233 !important;
+        color: #e6edf3 !important;
+    }
+    [role="option"] { background-color: #1a2233 !important; color: #e6edf3 !important; }
+    [role="option"]:hover { background-color: #26324a !important; }
+
+    /* Pogas */
+    .stButton > button, .stDownloadButton > button {
+        background: linear-gradient(90deg, #1f6feb, #3fa0ff);
+        color: #ffffff;
         border: none;
         border-radius: 6px;
         font-weight: 600;
     }
-    .stButton > button:hover {
-        background: linear-gradient(90deg, #1557a0, #1a6fa8);
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        background: linear-gradient(90deg, #1a5cd0, #2f81c9);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(26,111,168,0.3);
+        box-shadow: 0 4px 12px rgba(31,111,235,0.4);
     }
-    /* Download buttons */
-    .stDownloadButton > button {
-        background: linear-gradient(90deg, #0e7c3a, #1aab52) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-    }
-    /* Cards / expanders */
+
+    /* Expander / Info */
     .streamlit-expanderHeader {
-        background: #d0eaf8 !important;
+        background: #161f33 !important;
         border-radius: 6px !important;
-        color: #1a6fa8 !important;
+        color: #7cc0ff !important;
         font-weight: 600 !important;
     }
-    /* Info boxes */
-    .stInfo { background: #d0eaf8 !important; border-left: 4px solid #1a6fa8 !important; }
-    /* Dividers */
-    hr { border-color: #4da6e8 !important; }
+    .streamlit-expanderHeader:hover { color: #a8d4ff !important; }
+    .stInfo {
+        background: #12243c !important;
+        border-left: 4px solid #3fa0ff !important;
+        color: #d7e9ff !important;
+    }
+    .stAlert { background-color: #161f33 !important; color: #e6edf3 !important; }
+
+    hr { border-color: #2f81c9 !important; }
+
     /* Tabs */
     .stTabs [data-baseweb="tab"] {
-        background: #d0eaf8;
+        background: #161f33;
         border-radius: 6px 6px 0 0;
-        color: #1a6fa8;
+        color: #9fc6e8;
         font-weight: 600;
     }
     .stTabs [aria-selected="true"] {
-        background: #1a6fa8 !important;
+        background: #1f6feb !important;
         color: white !important;
+    }
+
+    /* Tabulas / data editor */
+    [data-testid="stDataFrame"], [data-testid="stDataEditor"] {
+        background-color: #111827 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -117,6 +147,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_PRESETS_PATH    = os.path.join(BASE_DIR, "bseo_presets.csv")
 LOCAL_HISTORY_PATH    = os.path.join(BASE_DIR, "bseo_invoice_history.csv")
 LOCAL_TEST_HIST_PATH  = os.path.join(BASE_DIR, "bseo_test_invoice_history.csv")
+LOCAL_CLIENTS_PATH    = os.path.join(BASE_DIR, "bseo_clients.csv")
 
 # GitHub ceļi (repozitorijā)
 # Nomainīt uz:
@@ -124,6 +155,7 @@ GITHUB_REPO            = "Andzhss/LSEO_pavadzimes"
 GITHUB_PRESETS_PATH    = "LSEO/presets.csv"
 GITHUB_HISTORY_PATH    = "LSEO/invoice_history.csv"
 GITHUB_TEST_HIST_PATH  = "LSEO/test_invoice_history.csv"
+GITHUB_CLIENTS_PATH    = "LSEO/clients.csv"
 
 # CSV kolonnas vēsturei
 HISTORY_COLS = [
@@ -263,6 +295,14 @@ TRANSLATIONS = {
         "saved_local_only": "Saglabāts lokāli! (Nav GitHub Token)",
         "github_token_how": "Kā pieslēgt GitHub Token?",
         "language": "🌐 Valoda / Language",
+        "select_client": "Klients (saraksts)",
+        "new_client": "Jauns klients",
+        "save_client": "💾 Saglabāt klientu sarakstā",
+        "client_saved": "Klients saglabāts!",
+        "client_exists": "Šis klients jau ir sarakstā.",
+        "client_name_empty": "Ievadiet klienta nosaukumu.",
+        "client_saved_local": "Klients saglabāts lokāli (nav GitHub Token).",
+        "client_save_fail": "Neizdevās saglabāt klientu:",
     },
     "en": {
         "app_title": "SIA Baltic SEO Invoice Generator",
@@ -389,6 +429,14 @@ TRANSLATIONS = {
         "saved_local_only": "Saved locally! (No GitHub Token)",
         "github_token_how": "How to connect GitHub Token?",
         "language": "🌐 Language / Valoda",
+        "select_client": "Client (list)",
+        "new_client": "New client",
+        "save_client": "💾 Save client to list",
+        "client_saved": "Client saved!",
+        "client_exists": "This client is already in the list.",
+        "client_name_empty": "Please enter the client name.",
+        "client_saved_local": "Client saved locally (no GitHub Token).",
+        "client_save_fail": "Failed to save client:",
     }
 }
 
@@ -401,7 +449,10 @@ def t(key):
 # ---------------------------------------------------------------------------
 
 def get_github_token():
-    token = st.secrets.get("GITHUB_TOKEN", "")
+    try:
+        token = st.secrets.get("GITHUB_TOKEN", "")
+    except Exception:
+        token = ""
     return token.strip().strip('"').strip("'") if token else ""
 
 def fetch_csv_from_github(github_path):
@@ -745,6 +796,132 @@ def save_presets(df):
     df.to_csv(LOCAL_PRESETS_PATH, index=False)
 
 # ---------------------------------------------------------------------------
+# Klientu saraksts
+# ---------------------------------------------------------------------------
+
+def _client_key(c):
+    reg = (c.get('reg_no', '') or '').strip().lower()
+    return reg if reg else (c.get('name', '') or '').strip().lower()
+
+def _client_label(c):
+    parts = [(c.get('name', '') or '').strip()]
+    reg = (c.get('reg_no', '') or '').strip()
+    if reg:
+        parts.append(f"({reg})")
+    return " ".join(parts).strip()
+
+def load_clients():
+    if not os.path.exists(LOCAL_CLIENTS_PATH):
+        content = fetch_csv_from_github(GITHUB_CLIENTS_PATH)
+        if content and 'name' in content:
+            with open(LOCAL_CLIENTS_PATH, 'w', encoding='utf-8') as f:
+                f.write(content)
+    if not os.path.exists(LOCAL_CLIENTS_PATH):
+        return []
+    try:
+        df = pd.read_csv(LOCAL_CLIENTS_PATH, dtype=str)
+        if df.empty or 'name' not in df.columns:
+            return []
+        clients = []
+        for _, row in df.iterrows():
+            clients.append({
+                'name':    str(row.get('name', '') or '').strip(),
+                'reg_no':  str(row.get('reg_no', '') or '').strip(),
+                'vat_no':  str(row.get('vat_no', '') or '').strip(),
+                'address': str(row.get('address', '') or '').strip(),
+            })
+        return [c for c in clients if c['name']]
+    except Exception:
+        return []
+
+def _clients_to_df(clients):
+    cols = ['name', 'reg_no', 'vat_no', 'address']
+    rows = [{k: c.get(k, '') for k in cols} for c in clients]
+    return pd.DataFrame(rows, columns=cols) if rows else pd.DataFrame(columns=cols)
+
+def get_all_clients(history, test_history):
+    """Apvieno saglabātos klientus un vēsturē redzētos klientus (bez dublikātiem)."""
+    clients = load_clients()
+    seen_names = set()
+    seen_regs  = set()
+    result = []
+
+    def add(c):
+        name = (c.get('name', '') or '').strip()
+        if not name:
+            return
+        reg = (c.get('reg_no', '') or '').strip()
+        nk = name.lower()
+        rk = reg.lower() if reg else ''
+        if nk in seen_names or (rk and rk in seen_regs):
+            return
+        seen_names.add(nk)
+        if rk:
+            seen_regs.add(rk)
+        result.append({
+            'name': name,
+            'reg_no': reg,
+            'vat_no': (c.get('vat_no', '') or '').strip(),
+            'address': (c.get('address', '') or '').strip(),
+        })
+
+    for c in clients:
+        add(c)
+    for e in list(history) + list(test_history):
+        add({
+            'name':    e.get('pr_partneris', e.get('client_name', '')),
+            'reg_no':  e.get('client_reg_no', ''),
+            'vat_no':  e.get('pr_pvn_nr', e.get('client_vat_no', '')),
+            'address': e.get('client_address', ''),
+        })
+    result.sort(key=lambda c: c['name'].lower())
+    return result
+
+def save_client_to_github(client):
+    name = (client.get('name', '') or '').strip()
+    if not name:
+        return "empty", ""
+    clients = load_clients()
+    key = _client_key(client)
+    if key:
+        for c in clients:
+            if _client_key(c) == key:
+                return "exists", ""
+    clients.append({
+        'name': name,
+        'reg_no': (client.get('reg_no', '') or '').strip(),
+        'vat_no': (client.get('vat_no', '') or '').strip(),
+        'address': (client.get('address', '') or '').strip(),
+    })
+    df = _clients_to_df(clients)
+    df.to_csv(LOCAL_CLIENTS_PATH, index=False, encoding='utf-8')
+    if get_github_token():
+        success, msg = push_csv_to_github(df, GITHUB_CLIENTS_PATH, f"Pievieno klientu {name}")
+        if success:
+            return "saved", msg
+        return "error", msg
+    return "saved_local", ""
+
+def _on_client_pick():
+    labels  = st.session_state.get('_client_labels', [])
+    clients = st.session_state.get('_client_cache', [])
+    sel = st.session_state.get('client_pick', None)
+    if not sel or not labels or sel == labels[0]:
+        return
+    try:
+        idx = labels.index(sel) - 1
+        if 0 <= idx < len(clients):
+            c = clients[idx]
+            st.session_state.client_data = {
+                'name':    c.get('name', ''),
+                'address': c.get('address', ''),
+                'reg_no':  c.get('reg_no', ''),
+                'vat_no':  c.get('vat_no', ''),
+            }
+    except ValueError:
+        pass
+
+# ---------------------------------------------------------------------------
 # Excel ģenerators vēsturei
 # ---------------------------------------------------------------------------
 
@@ -1033,6 +1210,29 @@ def render_invoice_app():
 
     if doc_type_lv != "E-rēķins":
         st.header(t("client"))
+
+        # --- Klientu saraksts (dropdown) ---
+        clients = get_all_clients(history, test_history)
+        client_labels = [f"➕ {t('new_client')}"] + [_client_label(c) for c in clients]
+
+        st.session_state['_client_cache']  = clients
+        st.session_state['_client_labels'] = client_labels
+
+        cur_key = _client_key(st.session_state.client_data)
+        selected_index = 0
+        for i, c in enumerate(clients):
+            if cur_key and _client_key(c) == cur_key:
+                selected_index = i + 1
+                break
+
+        st.selectbox(
+            t("select_client"),
+            client_labels,
+            index=selected_index,
+            key="client_pick",
+            on_change=_on_client_pick,
+        )
+
         col1, col2 = st.columns([1, 1])
         with col1:
             lursoft_url = st.text_input(t("lursoft_url"))
@@ -1044,7 +1244,11 @@ def render_invoice_app():
                         if scraped.get('name'):    st.session_state.client_data['name']    = scraped['name']
                         if scraped.get('address'): st.session_state.client_data['address'] = scraped['address']
                         if scraped.get('reg_no'):  st.session_state.client_data['reg_no']  = scraped['reg_no']
-                        st.session_state.client_data['vat_no'] = "LV" + scraped.get('reg_no', '')
+                        if scraped.get('vat_no'):
+                            st.session_state.client_data['vat_no'] = scraped['vat_no']
+                        elif scraped.get('reg_no'):
+                            st.session_state.client_data['vat_no'] = "LV" + scraped['reg_no']
+                        st.session_state.pop("client_pick", None)
                         st.success(t("lursoft_ok"))
                         st.rerun()
                     else:
@@ -1054,6 +1258,23 @@ def render_invoice_app():
             st.session_state.client_data['address'] = st.text_input(t("address"), value=st.session_state.client_data['address'])
             st.session_state.client_data['reg_no']  = st.text_input(t("reg_no"),  value=st.session_state.client_data['reg_no'])
             st.session_state.client_data['vat_no']  = st.text_input(t("vat_no"),  value=st.session_state.client_data['vat_no'])
+
+        # --- Saglabāt jaunu klientu ---
+        if st.button(t("save_client")):
+            status, msg = save_client_to_github(dict(st.session_state.client_data))
+            if status == "empty":
+                st.warning(t("client_name_empty"))
+            elif status == "exists":
+                st.info(t("client_exists"))
+            elif status in ("saved", "saved_local"):
+                st.session_state.pop("client_pick", None)
+                if status == "saved":
+                    st.success(t("client_saved"))
+                else:
+                    st.success(t("client_saved_local"))
+                st.rerun()
+            else:
+                st.error(f"{t('client_save_fail')} {msg}")
     else:
         st.header(f"{t('receiver')} & {t('customer')}")
         col_rec, col_cus = st.columns(2)
@@ -1376,10 +1597,10 @@ def render_invoice_app():
                 line-height: 1.3;
             }}
             .inv-hist tbody tr:nth-child(even) {{
-                background-color: #eaf4fb;
+                background-color: #141e33;
             }}
             .inv-hist tbody tr:hover {{
-                background-color: #c2e0f4;
+                background-color: #1f2d4a;
             }}
             </style>
             <div style="overflow-x:auto; margin-top:10px">
