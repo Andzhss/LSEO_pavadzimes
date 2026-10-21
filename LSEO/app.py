@@ -1240,7 +1240,7 @@ def render_invoice_app():
             if scrape_btn and lursoft_url:
                 with st.spinner(t("loading")):
                     scraped = scrape_lursoft(lursoft_url)
-                    if scraped:
+                    if scraped and scraped.get('name'):
                         if scraped.get('name'):    st.session_state.client_data['name']    = scraped['name']
                         if scraped.get('address'): st.session_state.client_data['address'] = scraped['address']
                         if scraped.get('reg_no'):  st.session_state.client_data['reg_no']  = scraped['reg_no']
@@ -1252,7 +1252,8 @@ def render_invoice_app():
                         st.success(t("lursoft_ok"))
                         st.rerun()
                     else:
-                        st.error(t("lursoft_fail"))
+                        err = (scraped or {}).get('error', '')
+                        st.error(f"{t('lursoft_fail')} {err}" if err else t("lursoft_fail"))
         with col2:
             st.session_state.client_data['name']    = st.text_input(t("name"),    value=st.session_state.client_data['name'])
             st.session_state.client_data['address'] = st.text_input(t("address"), value=st.session_state.client_data['address'])

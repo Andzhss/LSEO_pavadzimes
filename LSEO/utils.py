@@ -31,6 +31,13 @@ def scrape_lursoft(url):
     Atgriež vārdnīcu ar atslēgām: name, reg_no, vat_no, address (vai None).
     """
     try:
+        # URL normalizēšana — noņemam liekās atstarpes un pievienojam shēmu, ja trūkst
+        url = (url or '').strip()
+        if not url:
+            return {'error': 'Nav norādīta Lursoft saite.'}
+        if not re.match(r'^https?://', url, re.I):
+            url = 'https://' + url
+
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -107,7 +114,12 @@ def scrape_lursoft(url):
                 data['address'] = clean
 
         # Atgriežam tikai tad, ja vismaz nosaukums ir atrasts
-        return data if data.get('name') else None
+        if not data.get('name'):
+            return {'error': 'Nevarēja atrast uzņēmuma nosaukumu šajā lapā. Pārbaudiet, vai saite ir uz konkrētu uzņēmumu/iestādi.'}
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Scraping error: {e}")
+        return {'error': f'Tīkla kļūda: {e}'}
     except Exception as e:
         print(f"Scraping error: {e}")
-        return None
+        return {'error': f'{type(e).__name__}: {e}'}
