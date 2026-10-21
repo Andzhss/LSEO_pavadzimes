@@ -2,6 +2,7 @@ from num2words import num2words
 import requests
 from bs4 import BeautifulSoup
 import re
+import time
 
 def money_to_words_lv(amount):
     """
@@ -21,6 +22,51 @@ def money_to_words_lv(amount):
     except Exception as e:
         return f"Kļūda aprēķinā: {e}"
 
+def _build_headers():
+    return {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'lv-LV,lv;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Upgrade-Insecure-Requests': '1',
+    }
+
+def _fetch_page(url):
+    """
+    Ielādē lapas HTML. Izmanto cloudscraper (ja instalēts), lai apietu Cloudflare
+    botu aizsardzību, citādi — parasto requests ar atkārtojumiem.
+    """
+    headers = _build_headers()
+
+    # 1) cloudscraper — pārvar Cloudflare aizsardzību
+    try:
+        import cloudscraper
+        try:
+            scraper = cloudscraper.create_scraper()
+            resp = scraper.get(url, headers=headers, timeout=20)
+            if resp.status_code == 200:
+                return resp.text
+        except Exception:
+            pass
+    except ImportError:
+        pass
+
+    # 2) requests ar atkārtojumiem (retry)
+    last_exc = None
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, headers=headers, timeout=15)
+            if resp.status_code == 200:
+                return resp.text
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            last_exc = e
+            time.sleep(1 + attempt)
+
+    if last_exc is not None:
+        raise last_exc
+    raise requests.exceptions.RequestException('Neizdevās ielādēt lapu.')
+
 def scrape_lursoft(url):
     """
     Nolasa uzņēmuma / iestādes datus no dažādiem Lursoft lapu veidiem:
@@ -38,13 +84,9 @@ def scrape_lursoft(url):
         if not re.match(r'^https?://', url, re.I):
             url = 'https://' + url
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
+        html = _fetch_page(url)
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(html, 'html.parser')
         data = {}
 
         # --- Reģistrācijas numurs no URL (uzticamākais avots) ---
