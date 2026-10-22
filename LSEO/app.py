@@ -1387,8 +1387,8 @@ def render_invoice_app():
 
             subtotal_after_discount = subtotal - discount_eur
 
-            # PVN ķeksītis — noklusējums: NEATZĪMĒTS
-            apply_vat = st.checkbox(t("vat_toggle"), value=False, key="apply_vat_checkbox")
+            # PVN ķeksītis — noklusējums: ATZĪMĒTS (PVN tiek pievienots)
+            apply_vat = st.checkbox(t("vat_toggle"), value=True, key="apply_vat_checkbox")
 
             vat   = subtotal_after_discount * 0.21 if apply_vat else 0.0
             total = subtotal_after_discount + vat
